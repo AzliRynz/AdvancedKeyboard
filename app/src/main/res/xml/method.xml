@@ -1,0 +1,6 @@
+<input-method xmlns:android="http://schemas.android.com/apk/res/android">
+    <subtype 
+        android:imeSubtypeMode="keyboard"
+        android:imeSubtypeLocale="en_US"
+        android:label="Advanced Keyboard"/>
+</input-method>
