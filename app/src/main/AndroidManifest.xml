@@ -13,6 +13,7 @@
         <service
             android:name=".AdvancedKeyboardService"
             android:label="@string/keyboard_name"
+            android:exported="true"
             android:permission="android.permission.BIND_INPUT_METHOD">
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
