@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Advanced Keyboard</string>
+    <string name="keyboard_name">Advanced Keyboard</string>
+
+    <string name="error_dictionary_load">Failed to load dictionary</string>
+
+    <string name="key_label_space">SPACE</string>
+    <string name="key_label_enter">ENTER</string>
+    <string name="key_label_shift">SHIFT</string>
+    <string name="key_label_emoji">EMOJI</string>
+    <string name="key_label_symbols">123</string>
+    <string name="key_label_abc">ABC</string>
+</resources>

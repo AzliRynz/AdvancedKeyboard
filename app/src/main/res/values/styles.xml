@@ -1,0 +1,13 @@
+<resources>
+    <style name="Theme.AdvancedKeyboard" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/key_special_background</item>
+        <item name="android:windowBackground">@color/keyboard_background</item>
+    </style>
+
+    <style name="KeyboardViewStyle">
+        <item name="android:keyBackground">@drawable/key_background</item>
+        <item name="android:keyTextColor">@color/key_text</item>
+        <item name="android:labelTextSize">16sp</item>
+        <item name="android:keyTextSize">18sp</item>
+    </style>
+</resources>

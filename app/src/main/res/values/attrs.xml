@@ -1,0 +1,4 @@
+<resources>
+    <attr name="keyStyle" format="reference"/>
+    <attr name="emojiSize" format="dimension"/>
+</resources>
