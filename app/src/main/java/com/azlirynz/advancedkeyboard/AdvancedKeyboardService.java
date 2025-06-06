@@ -83,7 +83,7 @@ public class AdvancedKeyboardService extends InputMethodService
     }
     
     private void setupEmojiKeyboard() {
-        EmojiAdapter emojiAdapter = new EmojiAdapter(this, emojiManager.getCategories(), this);
+        EmojiAdapter emojiAdapter = new EmojiAdapter(emojiManager.getCategories(), this);
         emojiBinding.emojiViewPager.setAdapter(emojiAdapter);
         
         emojiBinding.emojiCategories.setupWithViewPager(emojiBinding.emojiViewPager);
@@ -92,11 +92,10 @@ public class AdvancedKeyboardService extends InputMethodService
     private void setupSuggestions() {
         suggestionAdapter = new SuggestionAdapter(this, suggestions, this);
         binding.suggestionsRecycler.setLayoutManager(
-            new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+            new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.suggestionsRecycler.setAdapter(suggestionAdapter);
     }
-    
-    @Override
+
     public void onKey(int primaryCode, int[] keyCodes) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
