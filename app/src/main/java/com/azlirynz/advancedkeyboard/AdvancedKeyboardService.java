@@ -92,7 +92,7 @@ public class AdvancedKeyboardService extends InputMethodService
     private void setupSuggestions() {
         suggestionAdapter = new SuggestionAdapter(this, suggestions, this);
         binding.suggestionsRecycler.setLayoutManager(
-            new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         binding.suggestionsRecycler.setAdapter(suggestionAdapter);
     }
 
