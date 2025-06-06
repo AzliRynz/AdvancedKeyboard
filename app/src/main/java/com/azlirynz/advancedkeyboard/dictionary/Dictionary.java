@@ -3,6 +3,8 @@ package com.azlirynz.advancedkeyboard.dictionary;
 import android.content.Context;
 import android.util.Log;
 
+import com.azlirynz.advancedkeyboard.R;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
