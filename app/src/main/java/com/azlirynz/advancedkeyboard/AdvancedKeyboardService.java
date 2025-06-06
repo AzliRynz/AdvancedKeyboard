@@ -83,9 +83,8 @@ public class AdvancedKeyboardService extends InputMethodService
     
     private void setupEmojiKeyboard() {
         EmojiAdapter emojiAdapter = new EmojiAdapter(emojiManager.getCategories(), this);
-        emojiView.emojiViewPager.setAdapter(emojiAdapter);
-        
-        emojiView.emojiCategories.setupWithViewPager(emojiView.emojiViewPager);
+        binding.emojiViewPager.setAdapter(emojiAdapter);
+        binding.emojiCategories.setupWithViewPager(binding.emojiViewPager);
     }
     
     private void setupSuggestions() {
@@ -95,6 +94,7 @@ public class AdvancedKeyboardService extends InputMethodService
         binding.suggestionsRecycler.setAdapter(suggestionAdapter);
     }
 
+    @Override
     public void onKey(int primaryCode, int[] keyCodes) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
@@ -116,7 +116,7 @@ public class AdvancedKeyboardService extends InputMethodService
                 ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
                 break;
             default:
-                handleCharacter(primaryCode, ic);
+                handleCharacter(primaryCode, ic, keyCodes);
         }
     }
     
@@ -155,13 +155,13 @@ public class AdvancedKeyboardService extends InputMethodService
     private void toggleEmojiKeyboard() {
         isEmojiKeyboard = !isEmojiKeyboard;
         if (isEmojiKeyboard) {
-            setInputView(emojiBinding.getRoot());
+            setInputView(emojiView);
         } else {
             setInputView(binding.getRoot());
         }
     }
     
-    private void handleCharacter(int primaryCode, InputConnection ic) {
+    private void handleCharacter(int primaryCode, InputConnection ic, int[] keyCodes) {
         char code = (char) primaryCode;
         if (Character.isLetter(code)) {
             code = binding.keyboardView.isShifted() ? Character.toUpperCase(code) : Character.toLowerCase(code);
@@ -210,5 +210,43 @@ public class AdvancedKeyboardService extends InputMethodService
         }
     }
     
-    // Implement other required methods...
+    // Other required methods from interfaces
+    @Override
+    public void onPress(int primaryCode) {
+        // Optional: Handle key press feedback
+    }
+
+    @Override
+    public void onRelease(int primaryCode) {
+        // Optional: Handle key release
+    }
+
+    @Override
+    public void onText(CharSequence text) {
+        // Handle text input
+        InputConnection ic = getCurrentInputConnection();
+        if (ic != null) {
+            ic.commitText(text, 1);
+        }
+    }
+
+    @Override
+    public void swipeLeft() {
+        // Handle swipe left gesture
+    }
+
+    @Override
+    public void swipeRight() {
+        // Handle swipe right gesture
+    }
+
+    @Override
+    public void swipeDown() {
+        // Handle swipe down gesture
+    }
+
+    @Override
+    public void swipeUp() {
+        // Handle swipe up gesture
+    }
 }
