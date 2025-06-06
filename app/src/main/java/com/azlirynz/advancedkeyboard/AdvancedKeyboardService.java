@@ -3,12 +3,24 @@ package com.azlirynz.advancedkeyboard;
 import android.inputmethodservice.InputMethodService;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
+import android.inputmethodservice.Keyboard;
+import android.inputmethodservice.KeyboardView;
+import android.view.KeyEvent;
+import android.text.TextUtils;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.azlirynz.advancedkeyboard.databinding.KeyboardLayoutBinding;
+import com.azlirynz.advancedkeyboard.databinding.EmojiKeyboardLayoutBinding;
+import com.azlirynz.advancedkeyboard.R;
 import com.azlirynz.advancedkeyboard.dictionary.Dictionary;
 import com.azlirynz.advancedkeyboard.dictionary.WordComposer;
 import com.azlirynz.advancedkeyboard.emoji.EmojiAdapter;
 import com.azlirynz.advancedkeyboard.emoji.EmojiManager;
 import com.azlirynz.advancedkeyboard.suggestions.SuggestionAdapter;
+
+import java.util.List;
+import java.util.ArrayList;
 
 public class AdvancedKeyboardService extends InputMethodService 
     implements KeyboardView.OnKeyboardActionListener,
