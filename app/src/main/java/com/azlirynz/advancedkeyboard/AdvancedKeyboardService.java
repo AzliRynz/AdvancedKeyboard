@@ -28,7 +28,7 @@ public class AdvancedKeyboardService extends InputMethodService
     EmojiAdapter.OnEmojiClickListener {
 
     private KeyboardLayoutBinding binding;
-    private EmojiKeyboardLayoutBinding emojiBinding;
+    private View emojiView;
     
     private Keyboard qwertyKeyboard;
     private Keyboard symbolsKeyboard;
@@ -63,7 +63,7 @@ public class AdvancedKeyboardService extends InputMethodService
     @Override
     public View onCreateInputView() {
         binding = KeyboardLayoutBinding.inflate(getLayoutInflater());
-        emojiBinding = EmojiKeyboardLayoutBinding.inflate(getLayoutInflater());
+        emojiView = getLayoutInflater().inflate(R.layout.emoji_keyboard_layout, null);
         
         setupMainKeyboard();
         setupEmojiKeyboard();
