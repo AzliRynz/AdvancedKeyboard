@@ -11,7 +11,6 @@ import android.text.TextUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.azlirynz.advancedkeyboard.databinding.KeyboardLayoutBinding;
-import com.azlirynz.advancedkeyboard.databinding.EmojiKeyboardLayoutBinding;
 import com.azlirynz.advancedkeyboard.R;
 import com.azlirynz.advancedkeyboard.dictionary.Dictionary;
 import com.azlirynz.advancedkeyboard.dictionary.WordComposer;
