@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.azlirynz.advancedkeyboard.R;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -31,7 +30,9 @@ public class EmojiManager {
             List<EmojiCategory> loadedCategories = gson.fromJson(new InputStreamReader(is), type);
             
             categories.clear();
-            categories.addAll(loadedCategories);
+            if (loadedCategories != null) {
+                categories.addAll(loadedCategories);
+            }
             Log.d(TAG, "Loaded " + categories.size() + " emoji categories");
         } catch (Exception e) {
             Log.e(TAG, "Error loading emoji", e);
@@ -44,8 +45,34 @@ public class EmojiManager {
 
     public List<String> getEmojisForCategory(int categoryIndex) {
         if (categoryIndex >= 0 && categoryIndex < categories.size()) {
-            return new ArrayList<>(categories.get(categoryIndex).getEmojis());
+            EmojiCategory category = categories.get(categoryIndex);
+            if (category != null && category.getEmojis() != null) {
+                return new ArrayList<>(category.getEmojis());
+            }
         }
         return new ArrayList<>();
+    }
+
+    public List<List<String>> getEmojiList() {
+        List<List<String>> emojiList = new ArrayList<>();
+        for (EmojiCategory category : categories) {
+            if (category != null && category.getEmojis() != null) {
+                emojiList.add(new ArrayList<>(category.getEmojis()));
+            }
+        }
+        return emojiList;
+    }
+
+    public static class EmojiCategory {
+        private String name;
+        private List<String> emojis;
+
+        public String getName() {
+            return name;
+        }
+
+        public List<String> getEmojis() {
+            return emojis;
+        }
     }
 }
