@@ -1,6 +1,7 @@
 package com.azlirynz.advancedkeyboard;
 
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
@@ -59,7 +60,9 @@ public class AdvancedKeyboardService extends InputMethodService
         new Thread(() -> {
             dictionary.load();
             emojiManager.load();
-            runOnUiThread(() -> {
+            // Use handler to post to UI thread
+            View decorView = getWindow().getWindow().getDecorView();
+            decorView.post(() -> {
                 if (binding != null) {
                     setupSuggestions();
                 }
@@ -80,36 +83,14 @@ public class AdvancedKeyboardService extends InputMethodService
         symbolsKeyboard = new Keyboard(this, R.xml.number_symbols);
         currentKeyboard = qwertyKeyboard;
         
-        // Find a suitable key to use as template
-        Keyboard.Key templateKey = null;
-        for (Keyboard.Key key : qwertyKeyboard.getKeys()) {
-            if (key.label != null && key.label.length() == 1) {
-                templateKey = key;
-                break;
-            }
-        }
-        
-        if (templateKey != null) {
-            Keyboard.Key emojiKey = new Keyboard.Key(templateKey);
-            emojiKey.codes = new int[]{KEYCODE_EMOJI};
-            emojiKey.label = "😀";
-            
-            try {
-                Drawable icon = getResources().getDrawable(R.drawable.ic_emoji);
-                if (icon != null) {
-                    emojiKey.icon = icon;
-                    emojiKey.label = null;
-                }
-            } catch (Resources.NotFoundException e) {
-                Log.w(TAG, "Emoji icon not found");
-            }
-            
-            qwertyKeyboard.getKeys().add(emojiKey);
-        }
+        // Create emoji key properly
+        Keyboard.Key emojiKey = new Keyboard.Key(qwertyKeyboard, getResources(), R.drawable.ic_emoji, KEYCODE_EMOJI);
+        emojiKey.label = "😀";
+        qwertyKeyboard.getKeys().add(emojiKey);
 
         binding.keyboardView.setKeyboard(currentKeyboard);
         binding.keyboardView.setOnKeyboardActionListener(this);
-        binding.keyboardView.setPreviewEnabled(false); // Better UX for most keyboards
+        binding.keyboardView.setPreviewEnabled(false);
     }
 
     private void setupEmojiKeyboard() {
@@ -119,17 +100,15 @@ public class AdvancedKeyboardService extends InputMethodService
             ViewPager emojiViewPager = emojiView.findViewById(R.id.emojiViewPager);
             TabLayout emojiCategories = emojiView.findViewById(R.id.emojiCategories);
             
-            EmojiAdapter emojiAdapter = new EmojiAdapter(emojiManager.getEmojiList(), this);
+            // Create emoji pages for each category
+            List<List<String>> emojiPages = new ArrayList<>();
+            for (EmojiManager.EmojiCategory category : emojiManager.getCategories()) {
+                emojiPages.add(category.getEmojis());
+            }
+            
+            EmojiAdapter emojiAdapter = new EmojiAdapter(this, emojiPages, this);
             emojiViewPager.setAdapter(emojiAdapter);
             emojiCategories.setupWithViewPager(emojiViewPager);
-            
-            // Set custom tab views
-            for (int i = 0; i < emojiCategories.getTabCount(); i++) {
-                TabLayout.Tab tab = emojiCategories.getTabAt(i);
-                if (tab != null) {
-                    tab.setCustomView(emojiAdapter.getTabView(i));
-                }
-            }
         }
     }
 
