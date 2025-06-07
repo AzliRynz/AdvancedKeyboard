@@ -52,27 +52,4 @@ public class EmojiManager {
         }
         return new ArrayList<>();
     }
-
-    public List<List<String>> getEmojiList() {
-        List<List<String>> emojiList = new ArrayList<>();
-        for (EmojiCategory category : categories) {
-            if (category != null && category.getEmojis() != null) {
-                emojiList.add(new ArrayList<>(category.getEmojis()));
-            }
-        }
-        return emojiList;
-    }
-
-    public static class EmojiCategory {
-        private String name;
-        private List<String> emojis;
-
-        public String getName() {
-            return name;
-        }
-
-        public List<String> getEmojis() {
-            return emojis;
-        }
-    }
 }
