@@ -8,9 +8,10 @@ import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.view.KeyEvent;
 import android.text.TextUtils;
-import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.azlirynz.advancedkeyboard.databinding.KeyboardLayoutBinding;
@@ -30,103 +31,109 @@ public class AdvancedKeyboardService extends InputMethodService
     SuggestionAdapter.OnSuggestionClickListener,
     EmojiAdapter.OnEmojiClickListener {
 
-    // Binding for keyboard layout
+    private static final String TAG = "AdvancedKeyboard";
     private KeyboardLayoutBinding binding;
-    
-    // Emoji keyboard view
     private View emojiView;
-    
-    // Keyboard layouts
     private Keyboard qwertyKeyboard;
     private Keyboard symbolsKeyboard;
     private Keyboard currentKeyboard;
-    
-    // Keyboard state flags
     private boolean capsLock = false;
     private boolean isEmojiKeyboard = false;
     private boolean isPredictionEnabled = true;
     
-    // Text prediction components
     private final WordComposer wordComposer = new WordComposer();
     private Dictionary dictionary;
     private EmojiManager emojiManager;
-    
-    // Suggestions list
     private final List<String> suggestions = new ArrayList<>();
     private SuggestionAdapter suggestionAdapter;
     
-    // Custom key codes
     private static final int KEYCODE_EMOJI = -100;
+    private static final int KEYCODE_LANGUAGE_SWITCH = -101;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        
-        // Initialize dictionary and emoji manager
         dictionary = new Dictionary(this);
         emojiManager = new EmojiManager(this);
         
-        // Load resources in background thread
         new Thread(() -> {
             dictionary.load();
             emojiManager.load();
+            runOnUiThread(() -> {
+                if (binding != null) {
+                    setupSuggestions();
+                }
+            });
         }).start();
     }
 
     @Override
     public View onCreateInputView() {
         binding = KeyboardLayoutBinding.inflate(getLayoutInflater());
-        
-        // Set up main keyboard and suggestions
         setupMainKeyboard();
         setupSuggestions();
-        
         return binding.getRoot();
     }
 
     private void setupMainKeyboard() {
-        // Load keyboard layouts from XML
         qwertyKeyboard = new Keyboard(this, R.xml.qwerty);
         symbolsKeyboard = new Keyboard(this, R.xml.number_symbols);
         currentKeyboard = qwertyKeyboard;
         
-        // Add custom emoji key
-        Keyboard.Key emojiKey = new Keyboard.Key(qwertyKeyboard.getKeys().get(0));
-        emojiKey.codes = new int[] {KEYCODE_EMOJI};
-        emojiKey.label = "😀"; // Fallback text if icon missing
-        
-        try {
-            // Try to load emoji icon
-            emojiKey.icon = getResources().getDrawable(R.drawable.ic_emoji);
-        } catch (Resources.NotFoundException e) {
-            // Continue without icon if not found
+        // Find a suitable key to use as template
+        Keyboard.Key templateKey = null;
+        for (Keyboard.Key key : qwertyKeyboard.getKeys()) {
+            if (key.label != null && key.label.length() == 1) {
+                templateKey = key;
+                break;
+            }
         }
         
-        qwertyKeyboard.getKeys().add(emojiKey);
-        
-        // Configure keyboard view
+        if (templateKey != null) {
+            Keyboard.Key emojiKey = new Keyboard.Key(templateKey);
+            emojiKey.codes = new int[]{KEYCODE_EMOJI};
+            emojiKey.label = "😀";
+            
+            try {
+                Drawable icon = getResources().getDrawable(R.drawable.ic_emoji);
+                if (icon != null) {
+                    emojiKey.icon = icon;
+                    emojiKey.label = null;
+                }
+            } catch (Resources.NotFoundException e) {
+                Log.w(TAG, "Emoji icon not found");
+            }
+            
+            qwertyKeyboard.getKeys().add(emojiKey);
+        }
+
         binding.keyboardView.setKeyboard(currentKeyboard);
         binding.keyboardView.setOnKeyboardActionListener(this);
-        binding.keyboardView.setPreviewEnabled(true);
+        binding.keyboardView.setPreviewEnabled(false); // Better UX for most keyboards
     }
 
     private void setupEmojiKeyboard() {
         if (emojiView == null) {
-            // Inflate emoji keyboard layout
-            emojiView = View.inflate(this, R.layout.emoji_keyboard, null);
+            emojiView = getLayoutInflater().inflate(R.layout.emoji_keyboard, null);
             
-            // Get view references
             ViewPager emojiViewPager = emojiView.findViewById(R.id.emojiViewPager);
             TabLayout emojiCategories = emojiView.findViewById(R.id.emojiCategories);
             
-            // Set up emoji pager
-            emojiViewPager.setAdapter(new EmojiAdapter(emojiManager.getEmojiList(), this));
+            EmojiAdapter emojiAdapter = new EmojiAdapter(emojiManager.getEmojiList(), this);
+            emojiViewPager.setAdapter(emojiAdapter);
             emojiCategories.setupWithViewPager(emojiViewPager);
+            
+            // Set custom tab views
+            for (int i = 0; i < emojiCategories.getTabCount(); i++) {
+                TabLayout.Tab tab = emojiCategories.getTabAt(i);
+                if (tab != null) {
+                    tab.setCustomView(emojiAdapter.getTabView(i));
+                }
+            }
         }
     }
 
     private void setupSuggestions() {
-        // Configure suggestions recycler view
         suggestionAdapter = new SuggestionAdapter(suggestions, this);
         binding.suggestionsRecycler.setLayoutManager(
             new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -140,114 +147,130 @@ public class AdvancedKeyboardService extends InputMethodService
         
         switch(primaryCode) {
             case Keyboard.KEYCODE_DELETE:
-                // Handle backspace
-                CharSequence before = ic.getTextBeforeCursor(1, 0);
-                if (!TextUtils.isEmpty(before)) {
-                    ic.deleteSurroundingText(1, 0);
-                    if (isPredictionEnabled) {
-                        wordComposer.deleteLast();
-                        updateSuggestions();
-                    }
-                }
+                handleBackspace(ic);
                 break;
                 
             case Keyboard.KEYCODE_SHIFT:
-                // Toggle shift state
-                if (binding.keyboardView.isShifted()) {
-                    binding.keyboardView.setShifted(false);
-                    capsLock = false;
-                } else {
-                    binding.keyboardView.setShifted(true);
-                    capsLock = true;
-                }
-                binding.keyboardView.invalidateAllKeys();
+                handleShift();
                 break;
                 
             case Keyboard.KEYCODE_MODE_CHANGE:
-                // Switch between QWERTY and symbols
-                currentKeyboard = (currentKeyboard == qwertyKeyboard) ? symbolsKeyboard : qwertyKeyboard;
-                binding.keyboardView.setKeyboard(currentKeyboard);
+                toggleKeyboardMode();
                 break;
                 
             case KEYCODE_EMOJI:
-                // Toggle emoji keyboard
-                isEmojiKeyboard = !isEmojiKeyboard;
-                if (isEmojiKeyboard) {
-                    setupEmojiKeyboard();
-                    setInputView(emojiView);
-                } else {
-                    setInputView(binding.getRoot());
-                }
+                toggleEmojiKeyboard();
                 break;
                 
             case Keyboard.KEYCODE_DONE:
-                // Send enter key
                 ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
+                ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
                 break;
                 
             default:
-                // Handle regular character input
-                char code = (char) primaryCode;
-                if (Character.isLetter(code)) {
-                    // Apply shift state to letters
-                    code = binding.keyboardView.isShifted() ? Character.toUpperCase(code) : Character.toLowerCase(code);
-                    if (!capsLock) binding.keyboardView.setShifted(false);
-                }
-                
-                // Commit character to input
-                ic.commitText(String.valueOf(code), 1);
-                
-                // Update predictions if enabled
-                if (isPredictionEnabled && Character.isLetter(code)) {
-                    wordComposer.add(code, keyCodes);
-                    updateSuggestions();
-                } else {
-                    suggestions.clear();
-                    suggestionAdapter.notifyDataSetChanged();
-                }
+                handleCharacterInput(ic, primaryCode, keyCodes);
+        }
+    }
+
+    private void handleBackspace(InputConnection ic) {
+        CharSequence before = ic.getTextBeforeCursor(1, 0);
+        if (!TextUtils.isEmpty(before)) {
+            ic.deleteSurroundingText(1, 0);
+            if (isPredictionEnabled) {
+                wordComposer.deleteLast();
+                updateSuggestions();
+            }
+        }
+    }
+
+    private void handleShift() {
+        boolean isShifted = binding.keyboardView.isShifted();
+        if (isShifted && capsLock) {
+            binding.keyboardView.setShifted(false);
+            capsLock = false;
+        } else if (isShifted) {
+            capsLock = true;
+        } else {
+            binding.keyboardView.setShifted(true);
+        }
+        binding.keyboardView.invalidateAllKeys();
+    }
+
+    private void toggleKeyboardMode() {
+        currentKeyboard = (currentKeyboard == qwertyKeyboard) ? symbolsKeyboard : qwertyKeyboard;
+        binding.keyboardView.setKeyboard(currentKeyboard);
+        binding.keyboardView.invalidateAllKeys();
+    }
+
+    private void toggleEmojiKeyboard() {
+        isEmojiKeyboard = !isEmojiKeyboard;
+        if (isEmojiKeyboard) {
+            setupEmojiKeyboard();
+            setInputView(emojiView);
+        } else {
+            setInputView(binding.getRoot());
+        }
+    }
+
+    private void handleCharacterInput(InputConnection ic, int primaryCode, int[] keyCodes) {
+        char code = (char) primaryCode;
+        if (Character.isLetter(code)) {
+            code = binding.keyboardView.isShifted() ? Character.toUpperCase(code) : Character.toLowerCase(code);
+            if (!capsLock) {
+                binding.keyboardView.setShifted(false);
+            }
+        }
+        
+        ic.commitText(String.valueOf(code), 1);
+        
+        if (isPredictionEnabled && Character.isLetter(code)) {
+            wordComposer.add(code, keyCodes);
+            updateSuggestions();
+        } else {
+            clearSuggestions();
         }
     }
 
     private void updateSuggestions() {
-        // Get new suggestions from dictionary
         suggestions.clear();
-        suggestions.addAll(dictionary.getSuggestions(wordComposer));
+        List<String> newSuggestions = dictionary.getSuggestions(wordComposer);
+        if (newSuggestions != null) {
+            suggestions.addAll(newSuggestions);
+        }
+        suggestionAdapter.notifyDataSetChanged();
+    }
+
+    private void clearSuggestions() {
+        suggestions.clear();
         suggestionAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onSuggestionClick(String word) {
-        // Handle suggestion selection
         InputConnection ic = getCurrentInputConnection();
         if (ic != null) {
-            // Replace current word with suggestion
             ic.deleteSurroundingText(wordComposer.size(), 0);
             ic.commitText(word, 1);
-            
-            // Reset prediction state
             wordComposer.reset();
-            suggestions.clear();
-            suggestionAdapter.notifyDataSetChanged();
+            clearSuggestions();
         }
     }
 
     @Override
     public void onEmojiClick(String emoji) {
-        // Insert selected emoji
         InputConnection ic = getCurrentInputConnection();
-        if (ic != null) ic.commitText(emoji, 1);
+        if (ic != null) {
+            ic.commitText(emoji, 1);
+        }
     }
 
     // Required keyboard action listener methods
     @Override public void onPress(int primaryCode) {}
     @Override public void onRelease(int primaryCode) {}
-    
-    @Override 
-    public void onText(CharSequence text) {
+    @Override public void onText(CharSequence text) {
         InputConnection ic = getCurrentInputConnection();
         if (ic != null) ic.commitText(text, 1);
     }
-    
     @Override public void swipeLeft() {}
     @Override public void swipeRight() {}
     @Override public void swipeDown() {}
