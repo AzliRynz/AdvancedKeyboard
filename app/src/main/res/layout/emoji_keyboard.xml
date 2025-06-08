@@ -1,18 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#f5f5f5">
+    android:background="@color/background_gray_light"
+    android:paddingTop="8dp">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/emojiViewPager"
         android:layout_width="match_parent"
-        android:layout_height="300dp"/>
+        android:layout_height="300dp"
+        android:layout_marginBottom="4dp"
+        android:overScrollMode="never"/>
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/emojiCategories"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="#e0e0e0"/>
+        android:background="?attr/colorSurface"
+        app:tabIndicatorColor="?attr/colorPrimary"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="scrollable"
+        app:tabRippleColor="?attr/colorOnSurface"
+        app:tabSelectedTextColor="?attr/colorPrimary"
+        app:tabTextColor="?attr/colorOnSurface"/>
+
 </LinearLayout>
