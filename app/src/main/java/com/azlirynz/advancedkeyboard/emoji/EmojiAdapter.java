@@ -20,7 +20,7 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiViewHol
     private final List<String> emojis;
     private final OnEmojiClickListener listener;
 
-    public EmojiAdapter(List<String> emojis, OnEmojiClickListener listener) {
+    public EmojiAdapter(@NonNull List<String> emojis, @NonNull OnEmojiClickListener listener) {
         this.emojis = emojis;
         this.listener = listener;
     }
@@ -30,7 +30,7 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiViewHol
     public EmojiViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.emoji_item, parent, false);
-        return new EmojiViewHolder(view);
+        return new EmojiViewHolder(view, listener);
     }
 
     @Override
@@ -43,15 +43,17 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiViewHol
         return emojis.size();
     }
 
-    class EmojiViewHolder extends RecyclerView.ViewHolder {
+    static class EmojiViewHolder extends RecyclerView.ViewHolder {
         private final TextView emojiView;
+        private final OnEmojiClickListener listener;
 
-        EmojiViewHolder(View itemView) {
+        EmojiViewHolder(@NonNull View itemView, @NonNull OnEmojiClickListener listener) {
             super(itemView);
+            this.listener = listener;
             emojiView = itemView.findViewById(R.id.emoji_text);
         }
 
-        void bind(final String emoji) {
+        void bind(@NonNull final String emoji) {
             emojiView.setText(emoji);
             itemView.setOnClickListener(v -> listener.onEmojiClick(emoji));
         }
