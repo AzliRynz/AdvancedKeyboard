@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/background_gray_light"
+    android:background="#ffffff"
     android:paddingTop="8dp">
 
     <androidx.viewpager2.widget.ViewPager2
