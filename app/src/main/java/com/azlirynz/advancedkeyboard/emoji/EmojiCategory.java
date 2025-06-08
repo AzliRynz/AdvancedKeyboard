@@ -2,7 +2,7 @@ package com.azlirynz.advancedkeyboard.emoji;
 
 import java.util.List;
 
-public static class EmojiCategory {
+public class EmojiCategory {
         private String name;
         private List<String> emojis;
 
