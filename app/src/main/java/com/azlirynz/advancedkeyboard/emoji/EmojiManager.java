@@ -52,4 +52,17 @@ public class EmojiManager {
         }
         return new ArrayList<>();
     }
+
+    public static class EmojiCategory {
+            private String name;
+            private List<String> emojis;
+
+            public String getName() {
+                return name;
+            }
+
+            public List<String> getEmojis() {
+                return emojis;
+            }
+    }
 }
