@@ -1,18 +1,18 @@
 package com.azlirynz.advancedkeyboard;
 
-import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService;
-import android.view.View;
-import android.view.inputmethod.InputConnection;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.InputConnection;
 import android.text.TextUtils;
 import android.util.Log;
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.azlirynz.advancedkeyboard.databinding.KeyboardLayoutBinding;
@@ -60,7 +60,6 @@ public class AdvancedKeyboardService extends InputMethodService
         new Thread(() -> {
             dictionary.load();
             emojiManager.load();
-            // Use handler to post to UI thread
             View decorView = getWindow().getWindow().getDecorView();
             decorView.post(() -> {
                 if (binding != null) {
@@ -83,8 +82,13 @@ public class AdvancedKeyboardService extends InputMethodService
         symbolsKeyboard = new Keyboard(this, R.xml.number_symbols);
         currentKeyboard = qwertyKeyboard;
         
-        // Create emoji key properly
-        Keyboard.Key emojiKey = new Keyboard.Key(qwertyKeyboard, getResources(), R.drawable.ic_emoji, KEYCODE_EMOJI);
+        Keyboard.Row row = new Keyboard.Row(qwertyKeyboard);
+        row.defaultHeight = 50;
+        row.defaultWidth = 50;
+        
+        Keyboard.Key emojiKey = new Keyboard.Key(row);
+        emojiKey.icon = ContextCompat.getDrawable(this, R.drawable.ic_emoji);
+        emojiKey.codes = new int[]{KEYCODE_EMOJI};
         emojiKey.label = "😀";
         qwertyKeyboard.getKeys().add(emojiKey);
 
@@ -100,13 +104,12 @@ public class AdvancedKeyboardService extends InputMethodService
             ViewPager emojiViewPager = emojiView.findViewById(R.id.emojiViewPager);
             TabLayout emojiCategories = emojiView.findViewById(R.id.emojiCategories);
             
-            // Create emoji pages for each category
             List<List<String>> emojiPages = new ArrayList<>();
             for (EmojiManager.EmojiCategory category : emojiManager.getCategories()) {
                 emojiPages.add(category.getEmojis());
             }
             
-            EmojiAdapter emojiAdapter = new EmojiAdapter(this, emojiPages, this);
+            EmojiAdapter emojiAdapter = new EmojiAdapter(emojiPages, this);
             emojiViewPager.setAdapter(emojiAdapter);
             emojiCategories.setupWithViewPager(emojiViewPager);
         }
@@ -128,24 +131,19 @@ public class AdvancedKeyboardService extends InputMethodService
             case Keyboard.KEYCODE_DELETE:
                 handleBackspace(ic);
                 break;
-                
             case Keyboard.KEYCODE_SHIFT:
                 handleShift();
                 break;
-                
             case Keyboard.KEYCODE_MODE_CHANGE:
                 toggleKeyboardMode();
                 break;
-                
             case KEYCODE_EMOJI:
                 toggleEmojiKeyboard();
                 break;
-                
             case Keyboard.KEYCODE_DONE:
                 ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
                 ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
                 break;
-                
             default:
                 handleCharacterInput(ic, primaryCode, keyCodes);
         }
@@ -199,9 +197,7 @@ public class AdvancedKeyboardService extends InputMethodService
                 binding.keyboardView.setShifted(false);
             }
         }
-        
         ic.commitText(String.valueOf(code), 1);
-        
         if (isPredictionEnabled && Character.isLetter(code)) {
             wordComposer.add(code, keyCodes);
             updateSuggestions();
@@ -243,7 +239,6 @@ public class AdvancedKeyboardService extends InputMethodService
         }
     }
 
-    // Required keyboard action listener methods
     @Override public void onPress(int primaryCode) {}
     @Override public void onRelease(int primaryCode) {}
     @Override public void onText(CharSequence text) {
