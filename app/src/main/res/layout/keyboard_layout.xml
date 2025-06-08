@@ -24,6 +24,6 @@
         android:labelTextSize="20sp"
         android:shadowColor="@android:color/transparent"
         android:background="#ffffff"
-        app:keyBackground="@drawable/modern_key_background"/>
+        app:keyBackground="@drawable/key_background"/>
 
 </LinearLayout>
